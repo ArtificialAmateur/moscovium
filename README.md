@@ -1,9 +1,4 @@
-# moscovium
-CyberPatriot script(s) and resources.
-
----
-
-## moscoivum-tahr
+# moscoivum-tahr
 
 #### Users
 
