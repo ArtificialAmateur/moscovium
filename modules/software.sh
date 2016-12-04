@@ -20,8 +20,8 @@ cp_cron(){
 
 #-|-------------- apt Sources --------------|-
 
-if ! cmp 'data/reference/apt_sources' '/etc/apt/sources.list' >/dev/null 2>&1; then
-  cp -f 'data/reference/apt_sources' '/etc/apt/sources.list'
+if ! cmp 'data/reference/apt-sources' '/etc/apt/sources.list' >/dev/null 2>&1; then
+  cp -f 'data/reference/apt-sources' '/etc/apt/sources.list'
   echo "  [+] Cleaned apt sources."
 fi
 
@@ -77,12 +77,12 @@ fi
 unwanted_programs="$(dpkg --get-selections | grep -E '^(apache|avahi|cupsd|master|nginx|nmap|medusa|john|nikto|hydra|tightvnc|bind|vsftpd|netcat)' | grep -v 'bind9-host' | grep -v 'deinstall')"
 if [ -n "$unwanted_programs" ]; then
     echo "  [+] Potentially unwanted programs:"
-	echo "$unwanted_programs" | grep -o '^\S*' > data/uninstalled_packages
-	cat data/uninstalled_packages | sed 's/^/    /'
-	read -p "  [?] Remove all these programs? (y/n) " choice
-	case "$choice" in
-	y|Y ) apt-get purge --auto-remove $(<'data/uninstalled_packages') && echo "  [+] Unwanted programs removed.";;
-	esac
+    echo "$unwanted_programs" | grep -o '^\S*' > data/uninstalled_packages
+    cat data/uninstalled_packages | sed 's/^/    /'
+    read -p "  [?] Remove all these programs? (y/n) " choice
+    case "$choice" in
+    y|Y ) apt-get purge --auto-remove $(<'data/uninstalled_packages') && echo "  [+] Unwanted programs removed.";;
+    esac
 fi
 
 #-|-------------- Unwanted Services --------------|-
@@ -165,13 +165,12 @@ fi
 
 #-|-------------- Lynis / Scans --------------|-
 
-  read -p "  [?] Scan with lynis? (y/n) " choice
-  case "$choice" in
-  y|Y ) if ! dpkg -s lynis >/dev/null 2>&1; then echo "    [+] Installing lynis..." &&
-        apt-get -qq -y install lynis; fi && echo $'\n    [-] Scanning with lynis...' &&
-        lynis -Q
-  esac
-fi
+read -p "  [?] Scan with lynis? (y/n) " choice
+case "$choice" in
+y|Y ) if ! dpkg -s lynis >/dev/null 2>&1; then echo "    [+] Installing lynis..." &&
+apt-get -qq -y install lynis; fi && echo $'\n    [-] Scanning with lynis...' &&
+lynis -Q
+esac
 
 
 cp_chrootkit(){
@@ -207,3 +206,4 @@ cp_clamav(){
     echo "    [+] Scanning with clamav..."
     clamscan -i -r /
 }
+

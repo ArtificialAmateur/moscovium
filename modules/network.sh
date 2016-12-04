@@ -5,15 +5,18 @@ echo $'\n[>] Networking'
 
 #-|-------------- Hosts File --------------|-
 
-if [ -a /etc/hosts ]; then
-	echo 127.0.0.1	localhost > /etc/hosts
-	(echo 127.0.1.1  "$(hostname)"
-	echo ::1     ip6-localhost ip6-loopback
-	echo fe00::0 ip6-localnet
-	echo ff00::0 ip6-mcastprefix
-	echo ff02::1 ip6-allnodes 
-	echo ff02::2 ip6-allrouters) >> /etc/hosts
-   	echo "  [+] Hosts file cleaned."
+# Generate clean hosts file
+echo 127.0.0.1	localhost > data/reference/hosts
+(echo 127.0.1.1  "$(hostname)"
+echo ::1     ip6-localhost ip6-loopback
+echo fe00::0 ip6-localnet
+echo ff00::0 ip6-mcastprefix
+echo ff02::1 ip6-allnodes 
+echo ff02::2 ip6-allrouters) >> data/reference/hosts
+
+if ! cmp 'data/reference/hosts' '/etc/hosts' >/dev/null 2>&1; then
+  cp -f 'data/reference/hosts' '/etc/hosts'
+  echo "  [+] Cleaned hosts file."
 fi
 
 
@@ -43,12 +46,11 @@ fi
 #-|-------------- Firewall --------------|-
 
 echo "y" | ufw reset >/dev/null
-ufw enable | sed 's/^/  [+] /' | sed 's/[^.]$/&./'
+ufw enable | sed 's/^/  [+] /' | sed 's/[^.]$/&. Firewall configured./'
 (ufw default deny
 ufw allow SSH
 ufw limit SSH
 ufw logging off) &>/dev/null
-echo "  [+] Firewall configured."
 
 
 #-|-------------- Ports? --------------|-
@@ -81,12 +83,12 @@ cp_ports(){
 
     echo $'\n[>] Listening Network Connections'
     netstat -ntulp | sed 's/^/        /' 
-
 }
+
 
 #-|-------------- apache2 Config --------------|-
 
-if [ -a /etc/apache2/apache2.conf ]; then
+if [ -e /etc/apache2/apache2.conf ]; then
 	echo '<Directory>' >> /etc/apache2/apache2.conf
 	echo -e ' \t AllowOverride None' >> /etc/apache2/apache2.conf
 	echo -e ' \t Order Deny,Allow' >> /etc/apache2/apache2.conf
@@ -103,7 +105,7 @@ fi
 if grep -q 0 /proc/sys/net/ipv4/tcp_syncookies; then 
 	echo 1 > /proc/sys/net/ipv4/tcp_syncookies
 	echo "net.ipv4.tcp_syncookies = 1" >> /etc/sysctl.conf
-	echo "  [+] syn cookie protection enabled."
+	echo "  [+] SYN cookie protection enabled."
 fi
 
 # Disable IPv6
@@ -123,7 +125,6 @@ sysctl -w net.ipv4.conf.default.send_redirects=0 )  &>/dev/null
 sysctl -w net.ipv4.conf.default.accept_redirects=0
 sysctl -w net.ipv4.conf.all.secure_redirects=0
 sysctl -w net.ipv4.conf.default.secure_redirects=0)  &>/dev/null
-echo "  [+] sysctl configured."
 
 
 #TO-DO: monitor el open connections
