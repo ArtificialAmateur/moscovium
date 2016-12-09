@@ -207,3 +207,8 @@ cp_clamav(){
     clamscan -i -r /
 }
 
+#-|-------------- Permissions --------------|-
+
+chmod 644 /etc/passwd /etc/passwd- && sudo chmod 640 /etc/shadow /etc/shadow-
+echo "  [+] Set important file permissions."
+
