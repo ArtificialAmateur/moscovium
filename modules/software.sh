@@ -210,12 +210,12 @@ cp_clamav(){
 #-|-------------- Permissions --------------|-
 
 chmod 02750 /bin/ping
-chmod 02750	/sbin/ifconfig
-chmod 02750	/usr/bin/w
-chmod 02750	/usr/bin/who
-chmod 02750	/usr/bin/locate
-chmod 02750	/usr/bin/whereis
-chmod 02750	/bin/su
+chmod 02750 /sbin/ifconfig
+chmod 02750 /usr/bin/w
+chmod 02750 /usr/bin/who
+chmod 02750 /usr/bin/locate
+chmod 02750 /usr/bin/whereis
+chmod 02750 /bin/su
 chmod 02750 /bin/sudo
 chmod 0700 /etc/profile	
 chmod 0700 /etc/hosts.allow	
