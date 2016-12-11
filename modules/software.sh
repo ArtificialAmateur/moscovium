@@ -207,26 +207,4 @@ cp_clamav(){
     clamscan -i -r /
 }
 
-#-|-------------- Permissions --------------|-
-
-chmod 02750 /bin/ping
-chmod 02750 /sbin/ifconfig
-chmod 02750 /usr/bin/w
-chmod 02750 /usr/bin/who
-chmod 02750 /usr/bin/locate
-chmod 02750 /usr/bin/whereis
-chmod 02750 /bin/su
-chmod 02750 /bin/sudo
-chmod 0700 /etc/profile	
-chmod 0700 /etc/hosts.allow	
-chmod 0700 /etc/mtab,
-chmod 0700 /etc/utmp
-chmod 0700 /var/adm/wtmp
-chmod 0700 /etc/syslog.pid
-chmod 0700 /etc/sysctl.conf
-chmod 0700 /etc/inittab
-chmod 644 /etc/passwd /etc/passwd-
-chmod 640 /etc/shadow /etc/shadow-
-
-echo "  [+] Set important file permissions."
 
