@@ -42,7 +42,6 @@ cp_purge_accounts(){
                 echo "        [+] $i password changed and chage password policy set."
             fi
             if [ "$i" = "$cp_my_user" ]; then
-                chmod 0755 /home/"$cp_my_user"
                 echo "      [+] $i chage password policy set."
             fi
         else
