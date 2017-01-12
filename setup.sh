@@ -22,10 +22,10 @@ echo "
   2) Networking  
   3) Software
 
- 99) Exit moscovium
+ 99) Exit
 "
 
-read -p "moscovium> " choice
+read -p "setup> " choice
     case "$choice" in
       1 ) modules/users.sh;;
       2 ) modules/network.sh;;
