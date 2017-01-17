@@ -5,31 +5,27 @@ echo $'\n[>] Software'
 
 #-|-------------- Cron --------------|-
 
-cp_cron(){
-
-    # Cron
-    echo $'\n[>] Cron'
-
-    # Check scheduled jobs
-    echo "[+] Listing /etc/cron* directories"
-    ls -la /etc/cron*
-    echo "[+] Listing root crontab"
-    crontab -l
-}
+read -p "  [?] Check for running cron jobs? (y/n) " choice
+case "$choice" in 
+  y|Y ) for user in $(cut -f1 -d: /etc/passwd); do crontab -u $user -l; done
+esac
 
 
 #-|-------------- apt Sources --------------|-
 
-if ! cmp 'data/reference/apt-sources' '/etc/apt/sources.list' >/dev/null 2>&1; then
-  cp -f 'data/reference/apt-sources' '/etc/apt/sources.list'
-  echo "  [+] Cleaned apt sources."
-fi
+cp /etc/apt/sources.list data/backup_files/sources.list.backup
+cp -f data/references/sources.list /etc/apt/sources.list
+echo "  [+] Cleaned apt sources."
 
 
 #-|-------------- Config Security --------------|-
 
-#nano /etc/resolv.conf #make sure if safe, use 8.8.8.8 for name server
-#nano /etc/rc.local #should be empty except for 'exit 0'
+cp /etc/resolv.conf data/backup_files/resolv.conf
+cp -f data/references/resolv.conf /etc/resolv.conf
+
+cp /etc/rc.local data/backup_files/rc.local.backup
+cp -f data/references/rc.local /etc/rc.local
+echo "  [+] Secured certain configuration files."
 
 
 #-|-------------- Unauthorized Files --------------|-
@@ -53,7 +49,7 @@ find /home -name "*.bat"
 find /home -name "*.sh") >> 'data/unauthorized_media'
 
 # Remove authorized media files from list
-for i in $(echo "CP-IX "; echo "moscovium"; echo ".cache"; echo "Trash"); do
+for i in $(echo "CP-IX "; echo "setup"; echo "users"; echo "network"; echo "software"; echo ".cache"; echo "Trash"); do
     sed -i "/$i/d" 'data/unauthorized_media'
 done
 
@@ -74,7 +70,7 @@ fi
 
 #-|-------------- Unwanted Programs --------------|-
 
-unwanted_programs="$(dpkg --get-selections | grep -E '^(apache|avahi|cupsd|master|nginx|nmap|medusa|john|nikto|hydra|tightvnc|bind|vsftpd|netcat)' | grep -v 'bind9-host' | grep -v 'deinstall')"
+unwanted_programs="$(dpkg --get-selections | grep -E '^(apache|cupsd|master|nginx|nmap|medusa|john|nikto|hydra|tightvnc|bind|vsftpd|netcat)' | grep -v 'bind9-host' | grep -v 'deinstall')"
 if [ -n "$unwanted_programs" ]; then
     echo "  [+] Potentially unwanted programs:"
     echo "$unwanted_programs" | grep -o '^\S*' > data/uninstalled_packages
@@ -117,7 +113,7 @@ ${s}"
   unwanted_services="$(echo -e "$services_to_delete")"
 }
 
-unwanted_services="$(service --status-all |& grep -wEo '(mysqld|postgres|dovecot|exim4|postfix|nfs|nmbd|rpc.mountd|rpc.nfsd|smbd|vsftpd|mpd|avahi-daemon|bind|dnsmasq|xinetd|inetd|telnet|cupsd|saned|ntpd|cron|apache2|httpd|jetty|nginx|tomcat)' | grep -v $(<data/critical_services) | grep -v "[ - ]")"
+unwanted_services="$(service --status-all |& grep -wEo '(mysqld|postgres|dovecot|exim4|postfix|nfs|nmbd|rpc.mountd|rpc.nfsd|smbd|vsftpd|mpd|bind|dnsmasq|xinetd|inetd|telnet|cupsd|saned|ntpd|cron|apache2|httpd|jetty|nginx|tomcat)' | grep -v $(<data/critical_services) | grep -v "[ - ]")"
 services_to_delete="$(echo '')"
 
 # Because -service --status-all is trash, verify if services are running
@@ -163,48 +159,37 @@ if ! dpkg -s gstreamer1.0-plugins-good >/dev/null 2>&1; then
 fi
 
 
-#-|-------------- Lynis / Scans --------------|-
+#-|------------------ Scans -----------------|-
 
+# First scanner
 read -p "  [?] Scan with lynis? (y/n) " choice
 case "$choice" in
 y|Y ) if ! dpkg -s lynis >/dev/null 2>&1; then echo "    [+] Installing lynis..." &&
-apt-get -qq -y install lynis; fi && echo $'\n    [-] Scanning with lynis...' &&
+apt-get -qq -y install lynis; fi && echo $'\n    [+] Scanning with lynis...' &&
 lynis -Q
 esac
 
+# Second scanner
+read -p "  [?] Scan with chkrootkit? (y/n) " choice
+case "$choice" in
+y|Y ) if ! dpkg -s chkrootkit >/dev/null 2>&1; then echo "    [+] Installing chkrootkit..." &&
+apt-get -qq -y install chkrootkit; fi && echo $'\n    [+] Scanning with chkrootkit...' &&
+chkrootkit
+esac
 
-cp_chrootkit(){
-    echo $'\n[>] chkrootkit'
+# Third scanner
+read -p "  [?] Scan with rkhunter? (y/n) " choice
+case "$choice" in
+y|Y ) if ! dpkg -s rkhunter >/dev/null 2>&1; then echo "    [+] Installing rkhunter..." &&
+apt-get -qq -y install rkhunter; fi && echo $'\n    [+] Scanning with rkhunter...' &&
+rkhunter -c
+esac
 
-    # First scanner
-    echo "    [+] Installing chkrootkit..."
-    echo 'y' | apt-get install chkrootkit &>/dev/null
-    echo "    [+] Scanning with chkrootkit..."
-    chkrootkit
-}
-
-cp_rkhunter(){
-    echo $'\n[>] rkhunter'
-
-    # Second scanner
-    echo "    [+] Installing rhkunter..."
-    echo 'y' | apt-get install rkhunter &>/dev/null
-    echo "    [+] Updating rhkunter..."
-    rkhunter --update
-    echo "    [+] Scanning with rhkunter..."
-    rkhunter -c
-}
-
-cp_clamav(){
-    echo $'\n[>] clamav'
-
-    # Third scanner
-    echo"    [+] Installing clamav..."
-    echo 'y' | apt-get install clamav &>/dev/null
-    echo "    [+] Updating clamav..."
-    freshclam &>/dev/null
-    echo "    [+] Scanning with clamav..."
-    clamscan -i -r /
-}
-
-
+# Fourth scanner
+read -p "  [?] Scan with clamav? (y/n) " choice
+case "$choice" in
+y|Y ) if ! dpkg -s clamav >/dev/null 2>&1; then echo "    [+] Installing clamav..." &&
+apt-get -qq -y install rkhunter; fi && echo $'\n    [+] Scanning with clamav...' &&
+freshclam &>/dev/null && 
+clamscan -i -r /
+esac

@@ -3,12 +3,6 @@
 echo $'\n[>] Users'
 
 
-#-|-------------- Check /etc/passwd --------------|-
-
-# TO-DO
-
-    
-
 #-|-------------- Purge accounts  --------------|-
 
 cp_input_accounts(){
@@ -20,7 +14,7 @@ cp_input_accounts(){
     printf '%s\n' "${admins[@]}" >> data/valid_admins
     read -p '      [+] Please enter the valid standard users: ' -a users
     printf '%s\n' "${users[@]}" >> data/valid_users
-}
+} 
 
 cp_purge_accounts(){
     # All valid admins are also valid users
@@ -63,11 +57,37 @@ cp_purge_accounts(){
     done
 }
 
+cp_create_accounts(){
+	# Get system users and admins
+    admins="$(grep -Po '^sudo.+:\K.*$' /etc/group | tr "," "\n")"
+    users="$(cat /etc/passwd | grep bash | awk -F: '{ print $1 }')"
+
+	# Get how many valid_admins & valid_users exist
+    admins_length="$(sed -n '$=' data/valid_admins)"
+    users_length="$(sed -n '$=' data/valid_users)"
+    
+    # Add valid_users
+    for ((i=1; i<=users_length; i++)); do
+    	valid_users="$(awk 'FNR == $i { print; exit }' data/valid_users)"
+    	if ! grep -Fxqs "$valid_users" '/etc/passwd'; then
+    		useradd -mn $valid_users
+    	fi
+    done
+    	
+    # Add valid_admins
+    for ((i=1; i<=admins_length; i++)); do
+    	valid_admins="$(awk 'FNR == $i { print; exit }' data/valid_admins)"
+    	if ! grep -Fxqs "$valid_admins" '/etc/passwd'; then
+    		useradd -mn $i
+    		adduser $i sudo
+    	fi
+    done
+}  
+
 read -p "  [?] Edit and correct valid admins and users? (y/n) " choice
 case "$choice" in 
-  y|Y ) read -p "    [?] What is your username? " cp_my_user && cp_input_accounts && cp_purge_accounts;;
+  y|Y ) read -p "    [?] What is your username? " cp_my_user && cp_input_accounts && cp_create_accounts && cp_purge_accounts;;
 esac
-
 
 #-|-------------- Lock root account --------------|-
 
@@ -80,42 +100,35 @@ fi
 
 #-|-------------- lightdm Config --------------|-
 
-if ! grep -iq "allow-guest=false" /etc/lightdm/lightdm.conf; then
-  cp -f 'data/reference/lightdm-config' '/etc/lightdm/lightdm.conf'
-  echo "  [+] Disabled guest account."
-fi
-
-if ! grep -iq "greeter-hide-users=true" /etc/lightdm/lightdm.conf; then
-  cp -f 'data/reference/lightdm-config' '/etc/lightdm/lightdm.conf'
-  echo "  [+] Hid userlist."
-fi
+cp /etc/lightdm/lightdm.conf data/backup_files/lightdm.conf
+cp -f data/references/lightdm.conf /etc/lightdm/lightdm.conf
+echo "  [+] Lightdm file secured."
 
 
-#-|-------------- pam.d/common-password Policy --------------|-
+#-|-------------- sudoers Config --------------|-
+
+cp /etc/sudoers data/backup_files/sudoers.backup
+cp -f data/references/sudoers /etc/sudoers
+echo "  [+] Sudoers file secured."
+
+
+#-|-------------- Password Policy --------------|-
 
 if ! dpkg -s libpam-cracklib >/dev/null 2>&1; then
     echo "  [+] Installing libpam-cracklib..." &&
     apt-get -qq -y install libpam-cracklib
 fi
 
-if ! grep -iq "retry=3 minlen=8 difok=3 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1" /etc/pam.d/common-password; then
-  cp -f 'data/reference/pamd-common-pass' '/etc/pam.d/common-password'
-  echo "  [+] Password policy in /etc/pam.d/common-password set."
-fi
+cp /etc/login.defs data/backup_files/login.defs.backup
+cp -f data/references/login.defs /etc/login.defs
 
-if ! grep -iq "obscure use_authtok try_first_pass sha512 remember=5 minlen=8" /etc/pam.d/common-password; then
-  cp -f 'data/reference/pamd-common-pass' '/etc/pam.d/common-password'
-  echo "  [+] Password policy in /etc/pam.d/common-password set."
-fi
+cp /etc/pam.d/common-password data/backup_files/common-password.backup
+cp -f data/references/common-password /etc/pam.d/common-password
 
+cp /etc/pam.d/common-auth data/backup_files/common-auth.backup
+cp -f data/references/common-auth /etc/pam.d/common-auth
 
-#-|-------------- pam.d/common-auth Policy --------------|-
-
-if ! grep -iq "deny=5 onerr=fail unlock_time=1800" /etc/pam.d/common-auth; then
-    echo "auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800" >> /etc/pam.d/common-auth
-echo "  [+] Lockout Policy set in /etc/pam.d/common-auth."
-fi   
-
+echo "  [+] Password policy set."
 
 #-|-------------- audtid Policy --------------|-
 
@@ -124,33 +137,6 @@ if ! dpkg -s auditd >/dev/null 2>&1; then
     apt-get -qq -y install auditd
     auditctl -e 1 &>/dev/null
     echo "    [+] Audit policy set with auditd."
-fi
-
-
-#-|-------------- Password Policy --------------|-
-
-if ! grep -iq "PASS_MAX_DAYS   30" /etc/login.defs; then
-    sed -i '/^PASS_MAX_DAYS/ c\PASS_MAX_DAYS   30' /etc/login.defs
-    echo "  [+] PASS_MAX_DAYS set to 30."
-fi
-
-if ! grep -iq "PASS_MIN_DAYS   7" /etc/login.defs; then
-    sed -i '/^PASS_MIN_DAYS/ c\PASS_MIN_DAYS   7'  /etc/login.defs
-    echo "  [+] PASS_MIN_DAYS set to 7."
-fi
-
-if ! grep -iq "PASS_WARN_AGE   14" /etc/login.defs; then
-    sed -i '/^PASS_WARN_AGE/ c\PASS_WARN_AGE   14' /etc/login.defs
-    echo "  [+] PASS_WARN_AGE set to 14."
-fi
-
-
-#-|-------------- sudoers Config --------------|-
-
-if grep NOPASSWD /etc/sudoers; then
-	to_remove=$(grep NOPASSWD /etc/sudoers)
-	sed -i "s/${to_remove}/ /g" /etc/sudoers
-    echo "  [+] sudoers NOPASSWD rule(s) removed."
 fi
 
 

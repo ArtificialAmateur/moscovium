@@ -5,52 +5,42 @@ echo $'\n[>] Networking'
 
 #-|-------------- Hosts File --------------|-
 
-# Generate clean hosts file
-echo 127.0.0.1	localhost > data/reference/hosts
-(echo 127.0.1.1  "$(hostname)"
-echo ::1     ip6-localhost ip6-loopback
-echo fe00::0 ip6-localnet
-echo ff00::0 ip6-mcastprefix
-echo ff02::1 ip6-allnodes 
-echo ff02::2 ip6-allrouters) >> data/reference/hosts
-
-if ! cmp 'data/reference/hosts' '/etc/hosts' >/dev/null 2>&1; then
-  cp -f 'data/reference/hosts' '/etc/hosts'
-  echo "  [+] Cleaned hosts file."
-fi
+echo '127.0.0.1' $HOSTNAME >> data/references/hosts
+cp /etc/hosts data/backup_files/hosts.backup
+cp -f data/references/hosts /etc/hosts
+echo "  [+] Cleaned hosts file."
 
 
 #-|-------------- SSHD Config --------------|-
 
-if grep -iqs "PermitRootLogin yes" /etc/ssh/sshd_config; then
-    sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
-   	echo "  [+] SSHD PermitRootLogin set to no."
-fi
+cp /etc/ssh/ssh_config data/backup_files/ssh_config.backup
+cp -f data/references/ssh_config /etc/ssh/ssh_config
 
-if  grep -iqs "Protocol 1" /etc/ssh/sshd_config; then
-    sed -i 's/Protocol 2,1/Protocol 2/g' /etc/ssh/sshd_config
-    sed -i 's/Protocol 1,2/Protocol 2/g' /etc/ssh/sshd_config
-   	echo "  [+] SSHD set to use exclusively 2."
-fi
-if grep -iqs "X11Forwarding yes" /etc/ssh/sshd_config; then
-    sed -i 's/X11Forwarding yes/X11Forwarding no/g' /etc/ssh/sshd_config
-   	echo "  [+] SSHD X11Forwarding set to no."
-fi
-
-if grep -iqs "PermitEmptyPasswords yes" /etc/ssh/sshd_config; then
-    sed -i 's/PermitEmptyPasswords yes/PermitEmptyPasswords no/g' /etc/ssh/sshd_config
-   	echo "  [+] SSHD PermitEmptyPasswords set to no."
-fi
+cp /etc/ssh/sshd_config data/backup_files/sshd_config.backup
+cp -f data/references/sshd_config /etc/ssh/sshd_config
+echo "  [+] Secured ssh settings."
 
 
 #-|-------------- Firewall --------------|-
 
+if ! dpkg -s ufw >/dev/null 2>&1; then 
+    echo "    [+] Installing ufw..."
+    apt-get -qq -y install ufw
+fi
 echo "y" | ufw reset >/dev/null
-ufw enable | sed 's/^/  [+] /' | sed 's/[^.]$/&. Firewall configured./'
-(ufw default deny
-ufw allow SSH
-ufw limit SSH
-ufw logging off) &>/dev/null
+ufw default deny >/dev/null 2>&1
+ufw logging on >/dev/null 2>&1
+
+services_length="$(sed -n '$=' data/valid_admins)"
+for ((i=1; i<=services_length; i++)); do
+	service="$(awk 'FNR == $i { print; exit }' data/critical_services | tr '[:lower:]' '[:upper:]')"
+	ufw allow $service >/dev/null 2>&1
+	if [ "$service" = "SSH" ]; then
+		ufw limit SSH >/dev/null 2>&1
+	fi
+done
+ufw enable >/dev/null 2>&1
+echo "  [+] Firewall configured."
 
 
 #-|-------------- Ports? --------------|-
@@ -128,5 +118,5 @@ sysctl -w net.ipv4.conf.default.secure_redirects=0)  &>/dev/null
 
 
 #TO-DO: monitor el open connections
-#TO-DO: add ipv6 iptables rules
-
+#TO-DO: use tcpdump
+#TO-DO: make apache2, wordpress, mysql reference files.
