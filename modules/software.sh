@@ -49,7 +49,7 @@ find /home -name "*.bat"
 find /home -name "*.sh") >> 'data/unauthorized_media'
 
 # Remove authorized media files from list
-for i in $(echo "CP-IX "; echo "setup"; echo "users"; echo "network"; echo "software"; echo ".cache"; echo "Trash"); do
+for i in $(echo "CP-IX "; echo "ubuntu-14"; echo ".cache"; echo "Trash"); do
     sed -i "/$i/d" 'data/unauthorized_media'
 done
 
