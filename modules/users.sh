@@ -57,33 +57,6 @@ cp_purge_accounts(){
     done
 }
 
-cp_create_accounts(){
-	# Get system users and admins
-    admins="$(grep -Po '^sudo.+:\K.*$' /etc/group | tr "," "\n")"
-    users="$(cat /etc/passwd | grep bash | awk -F: '{ print $1 }')"
-
-	# Get how many valid_admins & valid_users exist
-    admins_length="$(sed -n '$=' data/valid_admins)"
-    users_length="$(sed -n '$=' data/valid_users)"
-    
-    # Add valid_users
-    for ((i=1; i<=users_length; i++)); do
-    	valid_users="$(awk 'FNR == $i { print; exit }' data/valid_users)"
-    	if ! grep -Fxqs "$valid_users" '/etc/passwd'; then
-    		useradd -mn $valid_users
-    	fi
-    done
-    	
-    # Add valid_admins
-    for ((i=1; i<=admins_length; i++)); do
-    	valid_admins="$(awk 'FNR == $i { print; exit }' data/valid_admins)"
-    	if ! grep -Fxqs "$valid_admins" '/etc/passwd'; then
-    		useradd -mn $i
-    		adduser $i sudo
-    	fi
-    done
-}  
-
 read -p "  [?] Edit and correct valid admins and users? (y/n) " choice
 case "$choice" in 
   y|Y ) read -p "    [?] What is your username? " cp_my_user && cp_input_accounts && cp_create_accounts && cp_purge_accounts;;
