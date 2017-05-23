@@ -27,9 +27,9 @@ echo "
 
 read -p "setup> " choice
     case "$choice" in
-      1 ) modules/users.sh;;
-      2 ) modules/software.sh;;
-      3 ) modules/network.sh;;
+      1 | Users | users ) modules/users.sh;;
+      2 | Software | software ) modules/software.sh;;
+      3 | Networking | networking ) modules/network.sh;;
       * ) exit;;
     esac
 done
