@@ -32,7 +32,7 @@ cp_purge_accounts(){
             # If user is authorized
             chage -E 01/01/2019 -m 5 -M 90 -I 30 -W 14 $i
             if [ "$i" != "$cp_my_user" ]; then
-                echo "$i:"'CA935_CyberPatriots!' | chpasswd
+                echo "$i:"'MyExamplePassword' | chpasswd
                 echo "        [+] $i password changed and chage password policy set."
             fi
             if [ "$i" = "$cp_my_user" ]; then
