@@ -77,7 +77,7 @@ if [ -n "$unwanted_programs" ]; then
     cat data/uninstalled_packages | sed 's/^/    /'
     read -p "  [?] Remove all these programs? (y/n) " choice
     case "$choice" in
-    y|Y ) apt-get purge --auto-remove $(<'data/uninstalled_packages') && echo "  [+] Unwanted programs removed.";;
+    y|Y ) apt purge --auto-remove $(<'data/uninstalled_packages') && echo "  [+] Unwanted programs removed.";;
     esac
 fi
 
@@ -137,7 +137,7 @@ fi
 # Update system
 read -p "  [?] Update/upgrade the system/distro? (y/n) " choice
 case "$choice" in
-  y|Y ) apt-get -y update && apt-get -y upgrade && apt-get dist-upgrade && apt-get -y install firefox && echo "  [+] System upgraded.";;
+  y|Y ) apt -y update && apt -y upgrade && apt dist-upgrade && apt -y install firefox && echo "  [+] System upgraded.";;
 esac
 
 
@@ -154,7 +154,7 @@ if ! dpkg -s gstreamer1.0-plugins-good >/dev/null 2>&1; then
   read -p $'\n  [?] Install media codecs? (y/n) ' choice
   case "$choice" in
   y|Y )  echo "  [+] Installing media codecs..." &&
-         apt-get -qq -y install gstreamer1.0-plugins-good ubuntu-restricted-extras
+         apt -qq -y install gstreamer1.0-plugins-good ubuntu-restricted-extras
   esac
 fi
 
@@ -165,7 +165,7 @@ fi
 read -p "  [?] Scan with lynis? (y/n) " choice
 case "$choice" in
 y|Y ) if ! dpkg -s lynis >/dev/null 2>&1; then echo "    [+] Installing lynis..." &&
-apt-get -qq -y install lynis; fi && echo $'\n    [+] Scanning with lynis...' &&
+apt -qq -y install lynis; fi && echo $'\n    [+] Scanning with lynis...' &&
 lynis -Q
 esac
 
@@ -173,7 +173,7 @@ esac
 read -p "  [?] Scan with chkrootkit? (y/n) " choice
 case "$choice" in
 y|Y ) if ! dpkg -s chkrootkit >/dev/null 2>&1; then echo "    [+] Installing chkrootkit..." &&
-apt-get -qq -y install chkrootkit; fi && echo $'\n    [+] Scanning with chkrootkit...' &&
+apt -qq -y install chkrootkit; fi && echo $'\n    [+] Scanning with chkrootkit...' &&
 chkrootkit
 esac
 
@@ -181,7 +181,7 @@ esac
 read -p "  [?] Scan with rkhunter? (y/n) " choice
 case "$choice" in
 y|Y ) if ! dpkg -s rkhunter >/dev/null 2>&1; then echo "    [+] Installing rkhunter..." &&
-apt-get -qq -y install rkhunter; fi && echo $'\n    [+] Scanning with rkhunter...' &&
+apt -qq -y install rkhunter; fi && echo $'\n    [+] Scanning with rkhunter...' &&
 rkhunter -c
 esac
 
@@ -189,7 +189,7 @@ esac
 read -p "  [?] Scan with clamav? (y/n) " choice
 case "$choice" in
 y|Y ) if ! dpkg -s clamav >/dev/null 2>&1; then echo "    [+] Installing clamav..." &&
-apt-get -qq -y install rkhunter; fi && echo $'\n    [+] Scanning with clamav...' &&
+apt -qq -y install rkhunter; fi && echo $'\n    [+] Scanning with clamav...' &&
 freshclam &>/dev/null && 
 clamscan -i -r /
 esac

@@ -89,7 +89,7 @@ echo "  [+] Sudoers file secured."
 
 if ! dpkg -s libpam-cracklib >/dev/null 2>&1; then
     echo "  [+] Installing libpam-cracklib..." &&
-    apt-get -qq -y install libpam-cracklib
+    apt -qq -y install libpam-cracklib
 fi
 
 cp /etc/login.defs data/backup_files/login.defs.backup
@@ -107,7 +107,7 @@ echo "  [+] Password policy set."
 
 if ! dpkg -s auditd >/dev/null 2>&1; then
     echo "  [+] Installing auditd..." &&
-    apt-get -qq -y install auditd
+    apt -qq -y install auditd
     auditctl -e 1 &>/dev/null
     echo "    [+] Audit policy set with auditd."
 fi
