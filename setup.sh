@@ -2,10 +2,9 @@
 
 ####################
 
-# CA-935th Ubuntu Script
 # @sourshane
 # @ArtificialAmateur
-# v 0.8
+# v 0.9
 # Thanks to Connor, Joshua, Will for a lot of the work
 
 ###################
